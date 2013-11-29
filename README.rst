@@ -2,7 +2,8 @@
 Stripe integration for django-oscar
 ===================================
 
-*This repo is just a skeleton at the moment. It isn't complete yet.*
+*This repo just supports Stripe Checkout at the moment. Although it should work with Stripe.js equally well,
+it has only been used with Checkout so far. It isn't complete yet.*
 
 This package provides integration between Stripe_ and Oscar_.  It is currently a
 work-in-progress - contributions are welcome.  Any questions, please use the Oscar mailing list: `django-oscar@googlegroups.com`_
@@ -41,9 +42,5 @@ and browse it after::
 TODO
 ====
 
-* In the sandbox, override the PaymentDetailsView to charge a user's card before
-  placing the order.
 * Create a "Stripe transaction" model that tracks each request/response to
   Stripe's servers
-* Investigate if we need a facade module like in the other Oscar extension libs.
-  Their API is so simple, I'm not sure we do.
