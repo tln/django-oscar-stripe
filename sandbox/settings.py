@@ -66,6 +66,11 @@ MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (location('static/'),)
 STATIC_ROOT = location('public/static')
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '$)a7n&o80u!6y5t-+jrd3)3!%vh&shg$wqpjpxc!ar&p#!)n1a'
@@ -140,6 +145,12 @@ LOGGING = {
             'class':'logging.StreamHandler',
             'formatter': 'verbose'
         },
+        'oscar_stripe_file': {
+             'level': 'DEBUG',
+             'class': 'logging.FileHandler',
+             'filename': '/tmp/oscar_stripe.log',
+             'formatter': 'verbose'
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -166,6 +177,11 @@ LOGGING = {
             'propagate': False,
             'level':'DEBUG',
         },
+        'oscar_stripe': {
+            'handlers': ['console', 'oscar_stripe_file'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
     }
 }
 
@@ -182,7 +198,10 @@ INSTALLED_APPS = [
     # External apps
     'django_extensions',
     'debug_toolbar',
+    'haystack',
+    'sorl.thumbnail',
     'oscar_stripe',
+    'compressor',
     'south',
 ]
 from oscar import get_core_apps
@@ -212,3 +231,16 @@ HAYSTACK_CONNECTIONS = {
 }
 
 OSCAR_SHOP_TAGLINE = 'Stripe sandbox'
+
+COMPRESS_ENABLED = False
+COMPRESS_PRECOMPILERS = (
+    ('text/less', 'lessc {infile} {outfile}'),
+)
+
+# =================
+# Stripe settings
+# =================
+STRIPE_SECRET_KEY = 'sk_test_iyXSkU6XayNItIIhF8rdrqm0'
+STRIPE_PUBLISHABLE_KEY = 'pk_test_LAIdr6RxwTeebDA7OBDTgHao'
+STRIPE_CURRENCY = 'USD'
+

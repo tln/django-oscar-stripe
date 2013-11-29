@@ -13,10 +13,10 @@ setup(name='django-oscar-stripe',
       packages=find_packages(exclude=['sandbox*', 'tests*']),
       include_package_data=True,
       install_requires=[
-          'django-oscar>=0.4',
-          'stripe==1.7.9'
+          'django-oscar>=0.6',
+          'stripe==1.9.8'
       ],
-      dependency_links=['https://code.stripe.com/stripe/stripe-1.7.9#egg=stripe'],
+      dependency_links=['https://code.stripe.com/stripe/stripe-1.9.8#egg=stripe'],
       # See http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
           'Development Status :: 4 - Beta',

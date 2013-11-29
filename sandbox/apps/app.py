@@ -1,5 +1,5 @@
 from oscar.app import Shop
-from apps.checkout.app import application  as checkout_app
+from checkout.app import application as checkout_app
 
 
 class StripeShop(Shop):

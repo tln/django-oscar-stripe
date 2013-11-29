@@ -1,6 +1,6 @@
 from oscar.apps.checkout.app import CheckoutApplication
 
-from apps.checkout import views
+from oscar_stripe import views
 
 
 class OverriddenCheckoutApplication(CheckoutApplication):
