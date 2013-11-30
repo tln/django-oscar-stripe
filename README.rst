@@ -3,7 +3,8 @@ Stripe integration for django-oscar
 ===================================
 
 *This repo just supports Stripe Checkout at the moment. Although it should work with Stripe.js equally well,
-it has only been used with Checkout so far. It isn't complete yet.*
+it has only been used with Checkout so far. It isn't complete yet. For instance, it currently doesn't support checkout
+with the stripe customer parameter.*
 
 This package provides integration between Stripe_ and Oscar_.  It is currently a
 work-in-progress - contributions are welcome.  Any questions, please use the Oscar mailing list: `django-oscar@googlegroups.com`_
