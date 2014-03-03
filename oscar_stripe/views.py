@@ -15,6 +15,7 @@ Source = get_model('payment', 'Source')
 
 
 class PaymentDetailsView(CorePaymentDetailsView):
+
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super(PaymentDetailsView, self).dispatch(request, *args, **kwargs)
@@ -23,19 +24,28 @@ class PaymentDetailsView(CorePaymentDetailsView):
         ctx = super(PaymentDetailsView, self).get_context_data(**kwargs)
         if self.preview:
             ctx['stripe_token_form'] = forms.StripeTokenForm(self.request.POST)
-            ctx['order_total_incl_tax_cents'] = (ctx['order_total'].incl_tax * 100).to_integral_value()
+            ctx['order_total_incl_tax_cents'] = (
+                ctx['order_total'].incl_tax * 100
+            ).to_integral_value()
         else:
             ctx['stripe_publishable_key'] = settings.STRIPE_PUBLISHABLE_KEY
         return ctx
 
     def handle_payment(self, order_number, total, **kwargs):
-        stripe_ref = Facade().charge(order_number, total, card=self.request.POST[STRIPE_TOKEN],
-                                     description=self.payment_description(order_number, total, **kwargs),
-                                     metadata=self.payment_metadata(order_number, total, **kwargs))
+        stripe_ref = Facade().charge(
+            order_number,
+            total,
+            card=self.request.POST[STRIPE_TOKEN],
+            description=self.payment_description(order_number, total, **kwargs),
+            metadata=self.payment_metadata(order_number, total, **kwargs))
 
         source_type, __ = SourceType.objects.get_or_create(name=PAYMENT_METHOD_STRIPE)
-        source = Source(source_type=source_type, currency=settings.STRIPE_CURRENCY, amount_allocated=total.incl_tax,
-                        amount_debited=total.incl_tax, reference=stripe_ref)
+        source = Source(
+            source_type=source_type,
+            currency=settings.STRIPE_CURRENCY,
+            amount_allocated=total.incl_tax,
+            amount_debited=total.incl_tax,
+            reference=stripe_ref)
         self.add_payment_source(source)
 
         self.add_payment_event(PAYMENT_EVENT_PURCHASE, total.incl_tax)

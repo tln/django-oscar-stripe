@@ -16,12 +16,22 @@ class Facade(object):
     def get_friendly_error_message(error):
         return 'An error occurred when communicating with the payment gateway.'
 
-    def charge(self, order_number, total, card, currency=settings.STRIPE_CURRENCY, description=None, metadata=None,
-               **kwargs):
+    def charge(self,
+        order_number,
+        total,
+        card,
+        currency=settings.STRIPE_CURRENCY,
+        description=None,
+        metadata=None,
+        **kwargs):
         try:
-            return stripe.Charge.create(amount=(total.incl_tax * 100).to_integral_value(), currency=currency,
-                                        card=card, description=description,
-                                        metadata=(metadata or {'order_number': order_number}), **kwargs).id
+            return stripe.Charge.create(
+                amount=(total.incl_tax * 100).to_integral_value(),
+                currency=currency,
+                card=card,
+                description=description,
+                metadata=(metadata or {'order_number': order_number}),
+                **kwargs).id
         except stripe.CardError, e:
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
         except stripe.StripeError, e:
