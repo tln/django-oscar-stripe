@@ -34,6 +34,11 @@ class PaymentDetailsView(CorePaymentDetailsView):
         return ctx
 
     def handle_payment(self, order_number, total, **kwargs):
+        """
+        Use the basket object that is passed in through kwargs
+        to generate a mapping of line items to partners so we can
+        generate separate charges to different vendors.
+        """
         facades = []
         partners = {}
         # Get all items and partners within the basket
@@ -44,6 +49,9 @@ class PaymentDetailsView(CorePaymentDetailsView):
 
             partners[partner].append(line)
 
+        # Attempt to pull the access token from the auth
+        # Stripe account, defaulting to the key that is found
+        # in the settings file.
         for partner, lines in partners.items():
             stripe_owner = partner.users.filter(social_auth__provider='stripe').all()
 
@@ -62,31 +70,46 @@ class PaymentDetailsView(CorePaymentDetailsView):
                 pass
                 # TODO: raise something
             try:
+                # We want to generate the charges first without capturing
+                # them (actually charging them). This allows us to confirm
+                # that everything is setup fine on the Stripe side after
+                # moving through all of the line items in the basket. If
+                # we find a single charge misbehaving, we can handle it
+                # separately.
+                facades = []
                 for line in lines:
                     facade = Facade(api_key=access_token)
-                    total = line.line_price_incl_tax * line.quantity
                     stripe_ref = facade.charge(
                         order_number,
-                        total,
+                        self.get_total(line),
                         card=self.request.POST[STRIPE_TOKEN],
                         description=self.payment_description(order_number, total, **kwargs),
                         metadata=self.payment_metadata(order_number, total, **kwargs))
+                    facades.append(facade)
 
+                # Once all the stripe charges have been created we can
+                # then go ahead and capture them (actually charge them).
+                for facade in facades:
+                    # Figure out what the application_fee might be here
+                    facade.capture()
                     source_type, __ = SourceType.objects.get_or_create(name=PAYMENT_METHOD_STRIPE)
                     source = Source(
                         source_type=source_type,
                         currency=settings.STRIPE_CURRENCY,
-                        amount_allocated=total,
-                        amount_debited=total,
-                        reference=stripe_ref)
+                        amount_allocated=facade.total,
+                        amount_debited=facade.total,
+                        reference=facade.charge.id)
 
                     self.add_payment_source(source)
-                    self.add_payment_event(PAYMENT_EVENT_PURCHASE, total)
+                    self.add_payment_event(PAYMENT_EVENT_PURCHASE, facade.total)
             except Exception, e:
                 import traceback
                 traceback.print_exc()
                 print e
                 raise e
+
+    def get_total(self, line):
+        return line.line_price_incl_tax * line.quantity
 
     def payment_description(self, order_number, total, **kwargs):
         return self.request.POST[STRIPE_EMAIL]

@@ -24,13 +24,14 @@ class Facade(object):
         description=None,
         metadata=None,
         **kwargs):
-
+        self.total = total
         try:
             self.charge_object = stripe.Charge.create(
                 amount=(total * 100).to_integral_value(),
                 currency=currency,
                 card=card,
                 description=description,
+                capture=False,
                 metadata=(metadata or {'order_number': order_number}),
                 **kwargs)
             return self.charge_object.id
