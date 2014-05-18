@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name='django-oscar-stripe',
-      version='0.1',
+      version='0.2',
       url='https://github.com/tangentlabs/django-oscar-stripe',
       author="David Winterbottom",
       author_email="david.winterbottom@tangentlabs.co.uk",
