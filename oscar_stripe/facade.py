@@ -5,8 +5,8 @@ import stripe
 
 
 class Facade(object):
-    def __init__(self):
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+    def __init__(self, api_key):
+        stripe.api_key = api_key
 
     @staticmethod
     def get_friendly_decline_message(error):
@@ -24,15 +24,24 @@ class Facade(object):
         description=None,
         metadata=None,
         **kwargs):
+
         try:
-            return stripe.Charge.create(
-                amount=(total.incl_tax * 100).to_integral_value(),
+            self.charge_object = stripe.Charge.create(
+                amount=(total * 100).to_integral_value(),
                 currency=currency,
                 card=card,
                 description=description,
                 metadata=(metadata or {'order_number': order_number}),
-                **kwargs).id
+                **kwargs)
+            return self.charge_object.id
         except stripe.CardError, e:
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
         except stripe.StripeError, e:
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
+
+    def capture(self, application_fee=0.0):
+        try:
+            self.charge_object.capture(application_fee=application_fee)
+        except stripe.StripeError, e:
+            raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
+
