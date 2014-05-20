@@ -40,9 +40,9 @@ class Facade(object):
         except stripe.StripeError, e:
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
 
-    def capture(self, application_fee=0.0):
+    def capture(self):
         try:
-            self.charge_object.capture(application_fee=application_fee)
+            self.charge_object.capture()
         except stripe.StripeError, e:
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
 
