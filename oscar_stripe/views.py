@@ -48,7 +48,7 @@ class PaymentDetailsView(CorePaymentDetailsView):
         partners = {
             default_partner: {
                 'stripe': self.get_stripe_token(default_partner),
-                'charges': [total.tax],
+                'charges': [total.tax, kwargs['shipping_cost']],
             }
         }
         # Get all items and partners within the basket
@@ -81,11 +81,6 @@ class PaymentDetailsView(CorePaymentDetailsView):
             if len(info['charges']):
                 chargeable_partners.append({partner: info})
 
-        shipping_cost = kwargs['shipping_cost']
-        shipping_charges = self.split_shipping_charge(
-            shipping_cost, len(chargeable_partners)
-        )
-
         facades = []
         # Attempt to pull the access token from the auth
         # Stripe account, defaulting to the key that is found
@@ -107,7 +102,7 @@ class PaymentDetailsView(CorePaymentDetailsView):
                 if len(charges) == 0:
                     continue
 
-                total = sum(charges, shipping_charges[index])
+                total = sum([charge for charge in charges if charge])
 
                 facade = Facade(api_key=stripe_access_token)
                 stripe_ref = facade.charge(
@@ -149,14 +144,6 @@ class PaymentDetailsView(CorePaymentDetailsView):
             (stockrecord.price_excl_tax - stockrecord.cost_price) * line.quantity,
             stockrecord.cost_price * line.quantity
         )
-
-    def split_shipping_charge(self, shipping_charge, divisor):
-        per_charge = (shipping_charge/divisor).quantize(D('0.01'), ROUND_FLOOR)
-        charges = [per_charge] * divisor
-        extras = int((shipping_charge - sum(charges))*100)
-        for x in range(0, extras):
-            charges[x] += D('0.01')
-        return charges
 
     def get_stripe_token(self, partner):
         stripe_owner = partner.users.filter(social_auth__provider='stripe').all()
