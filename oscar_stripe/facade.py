@@ -30,7 +30,7 @@ class Facade(object):
         **kwargs):
         try:
             charge_and_capture_together = getattr(settings,
-                "STRIPE_CHARGE_AND_CAPTURE", False)
+                "STRIPE_CHARGE_AND_CAPTURE_IN_ONE_STEP", False)
             return stripe.Charge.create(
                 amount=(total.incl_tax * 100).to_integral_value(),
                 currency=currency,
