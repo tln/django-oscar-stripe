@@ -37,7 +37,7 @@ class Facade(object):
                 card=card,
                 description=description,
                 metadata=(metadata or {'order_number': order_number}),
-                capture = charge_and_capture_together
+                capture = charge_and_capture_together,
                 **kwargs).id
         except stripe.CardError, e:
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
