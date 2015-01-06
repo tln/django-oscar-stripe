@@ -30,7 +30,7 @@ class Facade(object):
         **kwargs):
         try:
             charge_and_capture_together = getattr(settings,
-                "STRIPE_CHARGE_AND_CAPTURE", True)
+                "STRIPE_CHARGE_AND_CAPTURE", False)
             return stripe.Charge.create(
                 amount=(total.incl_tax * 100).to_integral_value(),
                 currency=currency,
@@ -45,6 +45,10 @@ class Facade(object):
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
 
     def capture(self, order_number, **kwargs):
+        """
+        if capture is set to false in charge, the charge will only be pre-authorized
+        one need to use capture to actually charge the customer
+        """
         try:
             order = Order.objects.get(number=order_number)
             payment_source = Source.objects.get(order=order)
