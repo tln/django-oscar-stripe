@@ -62,6 +62,6 @@ class Facade(object):
             payment_source.date_captured = timezone.now()
             payment_source.save()
         except Source.DoesNotExist:
-            raise Exception("Capture Failiure could not find payment source for Order %s" % order_id)
+            raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
         except Order.DoesNotExist:
-            raise Exception("Capture Failiure Order %s does not exist" % order_id)
+            raise Exception("Capture Failiure Order %s does not exist" % order_number)
