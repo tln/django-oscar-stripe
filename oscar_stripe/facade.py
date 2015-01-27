@@ -4,7 +4,10 @@ from django.utils import timezone
 
 import stripe
 from django.db.models import get_model
+import logging
 
+
+logger = logging.getLogger(__name__)
 Source = get_model('payment', 'Source')
 Order = get_model('order', 'Order')
 
@@ -28,17 +31,21 @@ class Facade(object):
         description=None,
         metadata=None,
         **kwargs):
+        logger.info("Authorizing payment on order '%s' via stripe" % (order_number))
         try:
             charge_and_capture_together = getattr(settings,
                 "STRIPE_CHARGE_AND_CAPTURE_IN_ONE_STEP", False)
-            return stripe.Charge.create(
-                amount=(total.incl_tax * 100).to_integral_value(),
-                currency=currency,
-                card=card,
-                description=description,
-                metadata=(metadata or {'order_number': order_number}),
-                capture = charge_and_capture_together,
-                **kwargs).id
+            stripe_auth_id = stripe.Charge.create(
+                    amount=(total.incl_tax * 100).to_integral_value(),
+                    currency=currency,
+                    card=card,
+                    description=description,
+                    metadata=(metadata or {'order_number': order_number}),
+                    capture = charge_and_capture_together,
+                    **kwargs
+                ).id
+            logger.info("Authorization of payment on order '%s' via stripe -- SUCCESSFUL" % (order_number))
+            return stripe_auth_id
         except stripe.CardError, e:
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
         except stripe.StripeError, e:
@@ -49,6 +56,7 @@ class Facade(object):
         if capture is set to false in charge, the charge will only be pre-authorized
         one need to use capture to actually charge the customer
         """
+        logger.info("Initiating payment capture for order '%s' via stripe" % (order_number))
         try:
             order = Order.objects.get(number=order_number)
             payment_source = Source.objects.get(order=order)
@@ -61,6 +69,7 @@ class Facade(object):
             # set captured timestamp
             payment_source.date_captured = timezone.now()
             payment_source.save()
+            logger.info("payment for order '%s' (id:%s) was captured via stripe (%s)" % (order.number, order.id, charge_id))
         except Source.DoesNotExist:
             raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
         except Order.DoesNotExist:
