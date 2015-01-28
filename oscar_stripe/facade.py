@@ -44,7 +44,7 @@ class Facade(object):
                     capture = charge_and_capture_together,
                     **kwargs
                 ).id
-            logger.info("Authorization of payment on order '%s' via stripe -- SUCCESSFUL" % (order_number))
+            logger.info("Payment authorized for order %s via stripe." % (order_number))
             return stripe_auth_id
         except stripe.CardError, e:
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
