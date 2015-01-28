@@ -69,7 +69,7 @@ class Facade(object):
             # set captured timestamp
             payment_source.date_captured = timezone.now()
             payment_source.save()
-            logger.info("payment for order '%s' (id:%s) was captured via stripe (%s)" % (order.number, order.id, charge_id))
+            logger.info("payment for order '%s' (id:%s) was captured via stripe (stripe_ref:%s)" % (order.number, order.id, charge_id))
         except Source.DoesNotExist:
             raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
         except Order.DoesNotExist:
