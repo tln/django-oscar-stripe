@@ -32,6 +32,9 @@ class Facade(object):
         metadata=None,
         **kwargs):
         logger.info("Authorizing payment on order '%s' via stripe" % (order_number))
+        if card in [None, "", u""]:
+            logger.error("Card info not found (no stripe token) for order '%s' while trying to charge stripe" % (order_number))
+            raise UnableToTakePayment("Invalid card info")
         try:
             charge_and_capture_together = getattr(settings,
                 "STRIPE_CHARGE_AND_CAPTURE_IN_ONE_STEP", False)
