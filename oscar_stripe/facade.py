@@ -32,6 +32,9 @@ class Facade(object):
         metadata=None,
         **kwargs):
         logger.info("Authorizing payment on order '%s' via stripe" % (order_number))
+        if not card:
+            logger.error("Card info not found (no stripe token) for order '%s' while trying to charge stripe" % (order_number))
+            raise UnableToTakePayment("Invalid card info")
         try:
             charge_and_capture_together = getattr(settings,
                 "STRIPE_CHARGE_AND_CAPTURE_IN_ONE_STEP", False)
@@ -47,8 +50,10 @@ class Facade(object):
             logger.info("Payment authorized for order %s via stripe." % (order_number))
             return stripe_auth_id
         except stripe.CardError, e:
+            logger.exception('Card Error for order: \'{}\''.format(order_number) )
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
         except stripe.StripeError, e:
+            logger.exception('Stripe Error for order: \'{}\''.format(order_number) )
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
 
     def capture(self, order_number, **kwargs):
@@ -70,7 +75,9 @@ class Facade(object):
             payment_source.date_captured = timezone.now()
             payment_source.save()
             logger.info("payment for order '%s' (id:%s) was captured via stripe (stripe_ref:%s)" % (order.number, order.id, charge_id))
-        except Source.DoesNotExist:
+        except Source.DoesNotExist, e:
+            logger.exception('Source Error for order: \'{}\''.format(order_number) )
             raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
-        except Order.DoesNotExist:
+        except Order.DoesNotExist, e:
+            logger.exception('Order Error for order: \'{}\''.format(order_number) )
             raise Exception("Capture Failiure Order %s does not exist" % order_number)
