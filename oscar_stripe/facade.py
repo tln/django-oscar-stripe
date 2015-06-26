@@ -32,7 +32,7 @@ class Facade(object):
         metadata=None,
         **kwargs):
         logger.info("Authorizing payment on order '%s' via stripe" % (order_number))
-        if card in [None, "", u""]:
+        if not card:
             logger.error("Card info not found (no stripe token) for order '%s' while trying to charge stripe" % (order_number))
             raise UnableToTakePayment("Invalid card info")
         try:
