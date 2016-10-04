@@ -3,7 +3,7 @@ from oscar.apps.payment.exceptions import UnableToTakePayment, InvalidGatewayReq
 from django.utils import timezone
 
 import stripe
-from django.db.models import get_model
+from oscar.core.loading import get_model
 import logging
 
 
@@ -49,10 +49,10 @@ class Facade(object):
                 ).id
             logger.info("Payment authorized for order %s via stripe." % (order_number))
             return stripe_auth_id
-        except stripe.CardError, e:
+        except stripe.CardError as e:
             logger.exception('Card Error for order: \'{}\''.format(order_number) )
             raise UnableToTakePayment(self.get_friendly_decline_message(e))
-        except stripe.StripeError, e:
+        except stripe.StripeError as e:
             logger.exception('Stripe Error for order: \'{}\''.format(order_number) )
             raise InvalidGatewayRequestError(self.get_friendly_error_message(e))
 
@@ -75,9 +75,9 @@ class Facade(object):
             payment_source.date_captured = timezone.now()
             payment_source.save()
             logger.info("payment for order '%s' (id:%s) was captured via stripe (stripe_ref:%s)" % (order.number, order.id, charge_id))
-        except Source.DoesNotExist, e:
+        except Source.DoesNotExist as e:
             logger.exception('Source Error for order: \'{}\''.format(order_number) )
             raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
-        except Order.DoesNotExist, e:
+        except Order.DoesNotExist as e:
             logger.exception('Order Error for order: \'{}\''.format(order_number) )
             raise Exception("Capture Failiure Order %s does not exist" % order_number)
