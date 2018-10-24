@@ -2,9 +2,9 @@
 from setuptools import setup, find_packages
 
 setup(name='django-oscar-stripe',
-      version='0.1',
+      version='0.2',   # bump so that the build is obvious
       url='https://github.com/tangentlabs/django-oscar-stripe',
-      author="David Winterbottom",
+      author="David Winterbottom + forks",
       author_email="david.winterbottom@tangentlabs.co.uk",
       description="Stripe payment module for django-oscar",
       long_description=open('README.rst').read(),
