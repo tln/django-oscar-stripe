@@ -43,6 +43,7 @@ class Facade(object):
                     amount=(total.incl_tax * 100).to_integral_value(),
                     currency=currency,
                     card=card,
+                    customer=customer,
                     description=description,
                     metadata=(metadata or {'order_number': order_number}),
                     capture = charge_and_capture_together,
