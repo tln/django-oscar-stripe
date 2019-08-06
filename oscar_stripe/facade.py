@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 Source = get_model('payment', 'Source')
 Order = get_model('order', 'Order')
 
+
 class Facade(object):
     def __init__(self):
         stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -60,26 +61,46 @@ class Facade(object):
 
     def capture(self, order_number, **kwargs):
         """
-        if capture is set to false in charge, the charge will only be pre-authorized
-        one need to use capture to actually charge the customer
+        If capture is set to false in charge, the charge will only be pre-authorized
+        one need to use capture to actually charge the customer.
+
+        The `amount` to capture can be passed through `kwargs` (in
+        other case `order.total_incl_tax` will be used).
+
+        Different actions will be made based on value of `amount`:
+            * If `amount` is equal to the original amount - `amount`
+              will be captured.
+            * If `amount` is less that the original amount - `amount`
+              will be captured. Any additional amount will be
+              automatically refunded.
+            * If `amount` equals to `0` (zero) - will be refunded a
+              charge that has previously been created. Funds will be
+              refunded to the credit or debit card that was originally
+              charged.
         """
         logger.info("Initiating payment capture for order '%s' via stripe" % (order_number))
         try:
             order = Order.objects.get(number=order_number)
+            amount = kwargs.get('amount', None) or order.total_incl_tax
             payment_source = Source.objects.get(order=order)
-            # get charge_id from source
             charge_id = payment_source.reference
-            # find charge
             charge = stripe.Charge.retrieve(charge_id)
-            # capture
-            charge.capture()
-            # set captured timestamp
+            if amount > 0:
+                charge.capture(amount=(amount * 100).to_integral_value())
+                action_made = 'captured'
+            else:
+                charge.refund()
+                action_made = 'refunded'
             payment_source.date_captured = timezone.now()
+            payment_source.amount_debited = amount
+            payment_source.amount_refunded = payment_source.amount_allocated - amount
             payment_source.save()
-            logger.info("payment for order '%s' (id:%s) was captured via stripe (stripe_ref:%s)" % (order.number, order.id, charge_id))
+            logger.info(
+                "Payment for order '%s' (id:%s) was %s via stripe (stripe_ref:%s)" % (
+                    order.number, order.id, action_made, charge_id))
         except Source.DoesNotExist as e:
             logger.exception('Source Error for order: \'{}\''.format(order_number) )
             raise Exception("Capture Failiure could not find payment source for Order %s" % order_number)
         except Order.DoesNotExist as e:
             logger.exception('Order Error for order: \'{}\''.format(order_number) )
-            raise Exception("Capture Failiure Order %s does not exist" % order_number)
+            raise Exception("Capture Failure Order %s does not exist" % order_number)
