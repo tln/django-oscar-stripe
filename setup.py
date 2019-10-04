@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name='django-oscar-stripe',
-      version='0.2',   # bump so that the build is obvious
+      version='0.3',   # bump so that the build is obvious
       url='https://github.com/tangentlabs/django-oscar-stripe',
       author="David Winterbottom + forks",
       author_email="david.winterbottom@tangentlabs.co.uk",
@@ -14,9 +14,8 @@ setup(name='django-oscar-stripe',
       include_package_data=True,
       install_requires=[
           'django-oscar>=0.6',
-          'stripe==1.12.0'
+          'stripe>=1.12.0'
       ],
-      dependency_links=['https://code.stripe.com/stripe/stripe-1.12.0#egg=stripe'],
       # See http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
           'Development Status :: 4 - Beta',
